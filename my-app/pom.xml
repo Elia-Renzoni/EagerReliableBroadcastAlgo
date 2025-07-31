@@ -40,6 +40,13 @@
       <artifactId>junit-jupiter-params</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- jSON --!>
+    <dependency>
+      <groupId>com.fasterxml.jackson.core</groupId>
+      <artifactId>jackson-databind</artifactId>
+      <scope>2.17.2</scope>
+    </dependency>
   </dependencies>
 
   <build>
