@@ -29,6 +29,10 @@ public class Spreader implements ISpreader {
 
 		public void createPeerConnection(final String host, final int port) throws IOException {	
 			this.peerConn = new Socket(host, port);
+			this.peerConn.setKeepAlive(true);
+			this.peerConn.setSendBufferSize(2500);
+			this.peerConn.setReceiveBufferSize(2500);
+			this.peerConn.setSoTimeout(10);
 		}
 
 
