@@ -1,7 +1,8 @@
 package com.mycompany.app.Messages;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 public interface IMessageEndDec {
-	void encodeMessage(Message m);
-	Message decodeMessage(byte[] m);
+	byte[] encodeMessage(Message m) throws JsonProcessingException;
+	Message decodeMessage(byte[] m) throws Exception;
 }

@@ -11,7 +11,7 @@ public class ProcessGroup implements IProcessGroup {
 	private Lock mutex;
 	private static ProcessGroup instance = null;
 
-	private ProcessGroup() {
+	public ProcessGroup() {
 		this.cluster = new ArrayList<>();
 		this.mutex = new ReentrantLock();
 	}
