@@ -5,10 +5,10 @@ package com.mycompany.app.Messages;
 public class Message {
 	private String endpoint;
 	private String key;
-	private Byte[] value;
+	private byte[] value;
 	private String netAddr;
 
-	public Message(final String endpoint, final String key, final Byte[] value, final String addr) {
+	public Message(final String endpoint, final String key, final byte[] value, final String addr) {
 		this.endpoint = endpoint;
 		this.key = key;
 		this.value = value;
@@ -23,7 +23,7 @@ public class Message {
 		return this.key;
 	}
 
-	public Byte[] getValue() {
+	public byte[] getValue() {
 		return this.value;
 	}
 

@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.Thread;
 import java.net.Socket;
+import java.util.Optional;
 
 import com.mycompany.app.Broadcaster.*;
 import com.mycompany.app.Cluster.*;
@@ -52,44 +53,63 @@ public class Replica implements IReplica {
 
 	private Runnable applicationThreadImpl(Socket conn) {
 		return () -> {
-			InputStream connIn = conn.getInputStream();
-			byte[] buffer = new byte[1024];
+			try { 
+				InputStream connIn = conn.getInputStream();
+				byte[] buffer = new byte[1024];
 			
-			while (true) {
-				int status = connIn.read(buffer);
-				if (status == -1)
-					break;
-			}
+				while (true) {
+					int status = connIn.read(buffer);
+					if (status == -1)
+						break;
+				}
 
-			Message msg  = this.encoder.decodeMessage(buffer);
-			this.messageFilter(msg);
+				Message msg  = this.encoder.decodeMessage(buffer);
+				this.messageFilter(msg);
+			
+			} catch (Exception e) { System.out.println(e.getMessage()); }
 		};
 	}
 
-	private void messageFilter(final Message messageToFilter) {
-		byte[] bucket = switch (messageToFilter.getEndpoint()) {
-			case Endpoints.ADD_NODE.getEndpointValue() -> {
+	private Optional<byte[]> messageFilter(final Message messageToFilter) {
+		String messageEndpoint = messageToFilter.getEndpoint();
+		byte[] buff = switch (messageEndpoint) {
+			case "/add" -> {
 				this.addNodeToCluster(messageToFilter.getNetAddr());
 				this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
-				yeld null;
+				yield null;
 			}
-			case Endpoints.WRITE_KV.getEndpointValue() -> {
+			case "/set" -> {
+				this.writeBucket(messageToFilter.getKey(), messageToFilter.getValue());
+				this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
+				yield null;
 			}
-			case Endpoints.GET_KV.getEndpointValue() -> {}
-			case Endpoints.DELETE_KV.getEndpointValue() -> {}
-		}
+			case "/delete" -> {
+				this.removeBucket(messageToFilter.getKey());
+				this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
+				yield null;
+			}
+			case "/get" -> {
+				var valueInBucket = this.retreiveValue(messageToFilter.getKey());
+				yield valueInBucket;
+			}
+			default -> {
+				yield null;
+			}
+		};
+		return Optional.of(buff);
 	}
 
 	private void addNodeToCluster(final String addr) {
 	
 	}
 
-	private void writeBcuket(final String key, final byte[] value) {
+	private void writeBucket(final String key, final byte[] value) {
 	
 	}
 
 	private byte[] retreiveValue(final String key) {
 	
+		return null;
 	}
 
 	private void removeBucket(final String key) {
@@ -98,19 +118,3 @@ public class Replica implements IReplica {
 }
 
 
-enum Endpoints {
-	ADD_NODE("/add"),
-	WRITE_KV("/set"),
-	GET_KV("/get"),
-	DELETE_KV("/remove");
-
-	private String endpointValue;
-
-	private Endpoints(final String e) {
-		this.endpointValue = e;
-	}
-
-	public String getEndpointValue() {
-		return this.endpointValue;
-	}	
-}
