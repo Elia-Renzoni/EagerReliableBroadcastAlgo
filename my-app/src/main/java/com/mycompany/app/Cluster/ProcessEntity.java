@@ -2,13 +2,13 @@ package com.mycompany.app.Cluster;
 
 import java.net.InetSocketAddress;
 
-public class Process {
+public class ProcessEntity {
 	private InetSocketAddress processAddr;
 	private String host;
 	private int listenPort;
 
-	public Process(final InetSocketAddress addr) {
-		this.processAddr = addr;
+	public ProcessEntity(final InetSocketAddress addr) {
+		this.processAddr =  addr;
 		this.host = this.processAddr.getHostName();
 		this.listenPort = this.processAddr.getPort();
 	}

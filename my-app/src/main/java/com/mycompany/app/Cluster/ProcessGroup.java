@@ -7,7 +7,7 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class ProcessGroup implements IProcessGroup {
-	private List<Process> cluster;
+	private List<ProcessEntity> cluster;
 	private Lock mutex;
 	private static ProcessGroup instance = null;
 
@@ -24,7 +24,7 @@ public class ProcessGroup implements IProcessGroup {
 	}
 
 	@Override
-	public void addCorrectProcess(final Process p) {
+	public void addCorrectProcess(final ProcessEntity p) {
 		try {
 			this.mutex.lock();
 			this.cluster.add(p);
@@ -37,7 +37,7 @@ public class ProcessGroup implements IProcessGroup {
 	}
 
 	@Override
-	public boolean deleteCorrectProcess(final Process p) {
+	public boolean deleteCorrectProcess(final ProcessEntity p) {
 		boolean result = false;
 		try {
 			this.mutex.lock();
@@ -55,7 +55,7 @@ public class ProcessGroup implements IProcessGroup {
 
 	@Override
 	public List<Process> getProcessGroup() {
-		List<Process> c = null;
+		List<ProcessEntity> c = null;
 		try {
 			this.mutex.lock();
 			c = this.cluster;

@@ -4,9 +4,11 @@ import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.Thread;
 import java.net.Socket;
 import java.util.Optional;
+import java.net.SocketAddress;
 
 import com.mycompany.app.Broadcaster.*;
 import com.mycompany.app.Cluster.*;
@@ -64,12 +66,29 @@ public class Replica implements IReplica {
 				}
 
 				Message msg  = this.encoder.decodeMessage(buffer);
-				this.messageFilter(msg);
+				Optional<byte[]> result = this.messageFilter(msg);
+				
+				AckMessage am;
+				byte[] encodingResult;
+				if (result.isPresent()) {
+					am = new AckMessage(new String(result.get()));
+					encodingResult = this.encoder.encodeMessage(am);
+				} else {
+					am = new AckMessage("1");
+					encodingResult = this.encoder.encodeMessage(am);
+				
+				}
+
+				OutputStream connOut = conn.getOutputStream();
+				connOut.write(encodingResult);
+
+				conn.close();
 			
 			} catch (Exception e) { System.out.println(e.getMessage()); }
 		};
 	}
 
+	// TODO -> adjust return value
 	private Optional<byte[]> messageFilter(final Message messageToFilter) {
 		String messageEndpoint = messageToFilter.getEndpoint();
 		byte[] buff = switch (messageEndpoint) {
@@ -100,20 +119,41 @@ public class Replica implements IReplica {
 	}
 
 	private void addNodeToCluster(final String addr) {
-	
+		final String[] splitted = addr.split(":");
+		final String host = splitted[0];
+		final int port = Integer.parseInt(splitted[1]);
+
+		ProcessEntity p = new ProcessEntity(new InetSocketAddress(host, port));
+		this.clusterManager.addCorrectProcess(p);
 	}
 
 	private void writeBucket(final String key, final byte[] value) {
-	
+		try {
+			this.storageManager.setKV(key, value);
+		} catch (Exception e) { 
+			System.out.println(e.getMessage()); 
+			return;
+		}
 	}
 
 	private byte[] retreiveValue(final String key) {
-	
-		return null;
+		byte[] value = null;
+		try {
+			value = this.storageManager.getValueFromKey(key);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());	
+			return null;
+		}
+		return value;
 	}
 
 	private void removeBucket(final String key) {
-	
+		try {
+			this.storageManager.removeValueFromKey(key);
+		} catch (Exception ex) {
+			System.out.println(ex.getMessage());
+			return;
+		}
 	}
 }
 
