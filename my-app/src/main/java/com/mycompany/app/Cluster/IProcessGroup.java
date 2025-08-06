@@ -6,6 +6,7 @@ import java.util.List;
 public interface IProcessGroup {
 	void addCorrectProcess(final ProcessEntity p);
 	boolean deleteCorrectProcess(final ProcessEntity p); 
-	List<Process> getProcessGroup(); 
+	List<ProcessEntity> getProcessGroup(); 
+	boolean isEagerBroadcastCompatible(final ProcessEntity p);
 }
 

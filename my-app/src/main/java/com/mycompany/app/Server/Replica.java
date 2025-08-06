@@ -8,7 +8,6 @@ import java.io.OutputStream;
 import java.lang.Thread;
 import java.net.Socket;
 import java.util.Optional;
-import java.net.SocketAddress;
 
 import com.mycompany.app.Broadcaster.*;
 import com.mycompany.app.Cluster.*;
@@ -34,6 +33,14 @@ public class Replica implements IReplica {
 		this.clusterManager = new ProcessGroup();
 		this.storageManager = new Cache();
 		this.encoder = new MessageEncDec();
+	}
+
+	public String getReplicaHost() {
+		return this.host;
+	}
+
+	public int getReplicaPort() {
+		return this.listenPort;
 	}
 
 	@Override
@@ -76,7 +83,6 @@ public class Replica implements IReplica {
 				} else {
 					am = new AckMessage("1");
 					encodingResult = this.encoder.encodeMessage(am);
-				
 				}
 
 				OutputStream connOut = conn.getOutputStream();
@@ -88,24 +94,28 @@ public class Replica implements IReplica {
 		};
 	}
 
-	// TODO -> adjust return value
 	private Optional<byte[]> messageFilter(final Message messageToFilter) {
 		String messageEndpoint = messageToFilter.getEndpoint();
 		byte[] buff = switch (messageEndpoint) {
 			case "/add" -> {
-				this.addNodeToCluster(messageToFilter.getNetAddr());
-				this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
+				var erb = this.addNodeToCluster(messageToFilter.getNetAddr());
+				if (erb)
+					this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
 				yield null;
 			}
 			case "/set" -> {
-				this.writeBucket(messageToFilter.getKey(), messageToFilter.getValue());
-				this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
-				yield null;
+				var erb = this.storageManager.isBucketEagerRealibleCompatible(messageToFilter.getKey());
+				var res = this.writeBucket(messageToFilter.getKey(), messageToFilter.getValue());
+				if (erb)
+					this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
+				yield res;
 			}
 			case "/delete" -> {
-				this.removeBucket(messageToFilter.getKey());
-				this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
-				yield null;
+				var erb = this.storageManager.isBucketEagerRealibleCompatible(messageToFilter.getKey());
+				var res = this.removeBucket(messageToFilter.getKey());
+				if (!erb)
+					this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
+				yield res;
 			}
 			case "/get" -> {
 				var valueInBucket = this.retreiveValue(messageToFilter.getKey());
@@ -118,22 +128,28 @@ public class Replica implements IReplica {
 		return Optional.of(buff);
 	}
 
-	private void addNodeToCluster(final String addr) {
+	private boolean addNodeToCluster(final String addr) {
 		final String[] splitted = addr.split(":");
 		final String host = splitted[0];
 		final int port = Integer.parseInt(splitted[1]);
 
 		ProcessEntity p = new ProcessEntity(new InetSocketAddress(host, port));
 		this.clusterManager.addCorrectProcess(p);
+
+		if (this.clusterManager.isEagerBroadcastCompatible(p))
+			return true;
+		return false;
 	}
 
-	private void writeBucket(final String key, final byte[] value) {
+	private byte[] writeBucket(final String key, final byte[] value) {
 		try {
 			this.storageManager.setKV(key, value);
 		} catch (Exception e) { 
 			System.out.println(e.getMessage()); 
-			return;
+			return e.getMessage().getBytes();
 		}
+
+		return null;
 	}
 
 	private byte[] retreiveValue(final String key) {
@@ -142,18 +158,19 @@ public class Replica implements IReplica {
 			value = this.storageManager.getValueFromKey(key);
 		} catch (Exception e) {
 			System.out.println(e.getMessage());	
-			return null;
+			return e.getMessage().getBytes();
 		}
 		return value;
 	}
 
-	private void removeBucket(final String key) {
+	private byte[] removeBucket(final String key) {
 		try {
 			this.storageManager.removeValueFromKey(key);
 		} catch (Exception ex) {
 			System.out.println(ex.getMessage());
-			return;
+			return ex.getMessage().getBytes();
 		}
+		return null;
 	}
 }
 

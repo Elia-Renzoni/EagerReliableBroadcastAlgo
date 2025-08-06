@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.Optional;
 
 public class ProcessGroup implements IProcessGroup {
 	private List<ProcessEntity> cluster;
@@ -54,7 +55,7 @@ public class ProcessGroup implements IProcessGroup {
 
 
 	@Override
-	public List<Process> getProcessGroup() {
+	public List<ProcessEntity> getProcessGroup() {
 		List<ProcessEntity> c = null;
 		try {
 			this.mutex.lock();
@@ -65,5 +66,15 @@ public class ProcessGroup implements IProcessGroup {
 			this.mutex.unlock();
 		}
 		return c;
+	}
+
+	@Override
+	public boolean isEagerBroadcastCompatible(final ProcessEntity pe) {
+		Optional<ProcessEntity> p = this.cluster.stream()
+					         .filter(pr -> pr.getCompleteSocketAddress().getAddress().toString().equals(pe.getCompleteSocketAddress().getAddress().toString()))	
+						 .findFirst();
+		if (p.isPresent()) 
+			return false;
+		return true;
 	}
 }

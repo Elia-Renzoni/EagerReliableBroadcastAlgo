@@ -37,6 +37,13 @@ public class Cache implements ICache {
 		return true;
 	}
 
+	@Override
+	public boolean isBucketEagerRealibleCompatible(final String key) {
+		if (this.inMemoryStorage.containsKey(key))
+			return false;
+		return true;
+	}
+
 	private Byte[] transalateToBytesClass(final byte[] importSource) {
 		Byte[] result = new Byte[importSource.length]; 	
 		final int importSourceLength = importSource.length;
