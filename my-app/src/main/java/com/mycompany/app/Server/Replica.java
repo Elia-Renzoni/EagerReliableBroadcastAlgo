@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.lang.Thread;
 import java.net.Socket;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 import com.mycompany.app.Broadcaster.*;
 import com.mycompany.app.Cluster.*;
@@ -22,6 +23,7 @@ public class Replica implements IReplica {
 	private IProcessGroup clusterManager;
 	private ICache storageManager;
 	private IMessageEndDec encoder;
+	private static final Logger logger = Logger.getLogger(Replica.class.getName());
 
 	private ServerSocket server;
 
@@ -47,6 +49,8 @@ public class Replica implements IReplica {
 	public void startListener() throws IOException {
 		this.server = new ServerSocket();
 		this.server.bind(this.replicaIpAddr);
+
+		Replica.logger.info("Server Listening!");
 
 		while (!this.isSocketClose()) {
 			Socket conn = this.server.accept();
@@ -99,22 +103,28 @@ public class Replica implements IReplica {
 		byte[] buff = switch (messageEndpoint) {
 			case "/add" -> {
 				var erb = this.addNodeToCluster(messageToFilter.getNetAddr());
-				if (erb)
+				if (erb) {
+					Replica.logger.info("Broadcasting Cluster Node");
 					this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
+				}
 				yield null;
 			}
 			case "/set" -> {
 				var erb = this.storageManager.isBucketEagerRealibleCompatible(messageToFilter.getKey());
 				var res = this.writeBucket(messageToFilter.getKey(), messageToFilter.getValue());
-				if (erb)
+				if (erb) {
+					Replica.logger.info("Broadcasting New Bucket");
 					this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
+				}
 				yield res;
 			}
 			case "/delete" -> {
 				var erb = this.storageManager.isBucketEagerRealibleCompatible(messageToFilter.getKey());
 				var res = this.removeBucket(messageToFilter.getKey());
-				if (!erb)
+				if (!erb) {
+					Replica.logger.info("Broadcasting Bucket Deletion");
 					this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
+				}
 				yield res;
 			}
 			case "/get" -> {
@@ -136,6 +146,8 @@ public class Replica implements IReplica {
 		ProcessEntity p = new ProcessEntity(new InetSocketAddress(host, port));
 		this.clusterManager.addCorrectProcess(p);
 
+		Replica.logger.info("Add New Node the Cluster");
+
 		if (this.clusterManager.isEagerBroadcastCompatible(p))
 			return true;
 		return false;
@@ -148,6 +160,8 @@ public class Replica implements IReplica {
 			System.out.println(e.getMessage()); 
 			return e.getMessage().getBytes();
 		}
+
+		Replica.logger.info("Add New Entry to the Cache");
 
 		return null;
 	}
@@ -170,6 +184,8 @@ public class Replica implements IReplica {
 			System.out.println(ex.getMessage());
 			return ex.getMessage().getBytes();
 		}
+		Replica.logger.info("Delete Bucket from Cache");
+
 		return null;
 	}
 }
