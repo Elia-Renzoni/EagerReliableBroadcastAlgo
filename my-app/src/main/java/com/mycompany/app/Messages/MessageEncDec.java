@@ -10,7 +10,7 @@ public class MessageEncDec implements IMessageEndDec {
 	public MessageEncDec() { this.mapper = new ObjectMapper(); }
 
 	@Override
-	public byte[] encodeMessage(AckMessage m) throws JsonProcessingException {
+	public byte[] encodeMessage(Message m) throws JsonProcessingException {
 		return this.mapper.writeValueAsBytes(m);
 	}
 
