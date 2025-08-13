@@ -11,7 +11,7 @@ public class Cache implements ICache {
 
 	@Override
 	public void setKV(final String key, final byte[] value) throws Exception {
-		if (!(this.inMemoryStorage.containsKey(key))) 
+		if (this.inMemoryStorage.containsKey(key)) 
 			throw new Exception("The Given Key Already Exists!"); 
 		
 		this.inMemoryStorage.put(key, this.transalateToBytesClass(value)); 
@@ -28,7 +28,7 @@ public class Cache implements ICache {
 
 	@Override
 	public boolean removeValueFromKey(final String key) throws Exception {
-		if (!(this.inMemoryStorage.containsKey(key)))
+		if (this.inMemoryStorage.containsKey(key))
 			throw new Exception("Key Not Found!");
 
 		this.inMemoryStorage.remove(key);

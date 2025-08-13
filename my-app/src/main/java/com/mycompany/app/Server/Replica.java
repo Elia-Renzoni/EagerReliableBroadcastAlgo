@@ -88,7 +88,7 @@ public class Replica implements IReplica {
 					am = new AckMessage("1");
 					encodingResult = this.ackEncoder.encodeMessage(am);
 				}
-				System.out.println(am.toString());
+				System.out.println("Data Ack: " + encodingResult.toString());
 
 				DataOutputStream connOut = new DataOutputStream(conn.getOutputStream());
 				connOut.write(encodingResult);
@@ -137,7 +137,7 @@ public class Replica implements IReplica {
 				yield null;
 			}
 		};
-		return Optional.of(buff);
+		return Optional.ofNullable(buff);
 	}
 
 	private boolean addNodeToCluster(final String addr) {
