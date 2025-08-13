@@ -105,10 +105,8 @@ public class Replica implements IReplica {
 		byte[] buff = switch (messageEndpoint) {
 			case "/add" -> {
 				var erb = this.addNodeToCluster(messageToFilter.getNetAddr());
-				if (erb) {
-					Replica.logger.info("Broadcasting Cluster Node");
-					this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
-				}
+				Replica.logger.info("Broadcasting Cluster Node");
+				this.eagerBroadcastSpreader.eagerBroadcast(messageToFilter);
 				yield null;
 			}
 			case "/set" -> {
