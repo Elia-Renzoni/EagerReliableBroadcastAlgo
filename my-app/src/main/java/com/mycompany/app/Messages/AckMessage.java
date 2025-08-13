@@ -1,9 +1,13 @@
 package com.mycompany.app.Messages;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 public class AckMessage {
 	private String ack;
 
-	public AckMessage(final String ackContent) {
+	@JsonCreator
+	public AckMessage(@JsonProperty("ack") final String ackContent) {
 		this.ack = ackContent;
 	}
 

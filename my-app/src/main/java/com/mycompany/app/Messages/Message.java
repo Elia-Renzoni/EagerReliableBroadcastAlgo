@@ -1,6 +1,8 @@
 
 package com.mycompany.app.Messages;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class Message {
 	private String endpoint;
@@ -8,7 +10,11 @@ public class Message {
 	private byte[] value;
 	private String netAddr;
 
-	public Message(final String endpoint, final String key, final byte[] value, final String addr) {
+	@JsonCreator
+	public Message(@JsonProperty("endpoint") final String endpoint, 
+		       @JsonProperty("key") final String key, 
+		       @JsonProperty("value") final byte[] value, 
+		       @JsonProperty("addr") final String addr) {
 		this.endpoint = endpoint;
 		this.key = key;
 		this.value = value;

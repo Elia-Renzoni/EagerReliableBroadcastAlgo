@@ -67,6 +67,7 @@ class SocketSpreader {
 		this.seedAddr = host;
 		this.seedListenPort = port;
 		this.conn = new Socket(this.seedAddr, this.seedListenPort);
+		this.setConnectionParameters();
 	}
 
 	void sendMessage(final byte[] msg) throws Exception {
@@ -85,6 +86,11 @@ class SocketSpreader {
 		}
 
 		System.out.println("Ack Message from Seed Node: " + buffer.toString());
+	}
+
+	void setConnectionParameters() throws Exception {
+		this.conn.setSoTimeout(5000);
+		this.conn.setKeepAlive(true);
 	}
 }
 
