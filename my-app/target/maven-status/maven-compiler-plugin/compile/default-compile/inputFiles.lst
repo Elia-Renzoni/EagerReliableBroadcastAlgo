@@ -2,9 +2,15 @@
 /home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Broadcaster/ISpreader.java
 /home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Broadcaster/Spreader.java
 /home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Cluster/IProcessGroup.java
+/home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Cluster/Joiner.java
+/home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Cluster/ProcessEntity.java
 /home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Cluster/ProcessGroup.java
+/home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Messages/AckMessage.java
 /home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Messages/IMessageEndDec.java
 /home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Messages/Message.java
 /home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Messages/MessageEncDec.java
+/home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Server/IReplica.java
+/home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Server/Replica.java
 /home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Storage/Cache.java
 /home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/Storage/ICache.java
+/home/elia/EagerReliableBroadcastAlgo/my-app/src/main/java/com/mycompany/app/client/ClientWriter.java

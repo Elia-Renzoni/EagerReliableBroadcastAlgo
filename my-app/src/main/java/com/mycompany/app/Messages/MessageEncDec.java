@@ -4,14 +4,22 @@ package com.mycompany.app.Messages;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
-public class MessageEncDec implements IMessageEndDec {
+public class MessageEncDec<E> implements IMessageEndDec<E> {
 	private ObjectMapper mapper;	
 
 	public MessageEncDec() { this.mapper = new ObjectMapper(); }
 
 	@Override
-	public byte[] encodeMessage(Message m) throws JsonProcessingException {
-		return this.mapper.writeValueAsBytes(m);
+	public byte[] encodeMessage(E m) throws JsonProcessingException {
+		Message mtype;
+		AckMessage acktype;
+
+		if (m instanceof AckMessage) {
+			acktype = (AckMessage) m;
+			return this.mapper.writeValueAsBytes(acktype);
+		}
+		mtype = (Message) m;
+		return this.mapper.writeValueAsBytes(mtype);
 	}
 
 	@Override

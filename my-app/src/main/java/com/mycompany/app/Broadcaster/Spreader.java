@@ -3,7 +3,7 @@ package com.mycompany.app.Broadcaster;
 import com.mycompany.app.Cluster.IProcessGroup;
 import com.mycompany.app.Cluster.ProcessGroup;
 import com.mycompany.app.Messages.Message;
-import com.mycompany.app.Cluster.Process;
+import com.mycompany.app.Cluster.ProcessEntity;
 import com.mycompany.app.Messages.IMessageEndDec;
 import com.mycompany.app.Messages.MessageEncDec;
 
@@ -52,7 +52,7 @@ public class Spreader implements ISpreader {
 
 	@Override
 	public void eagerBroadcast(final Message msg) {
-		final List<Process> clusterList = this.cluster.getProcessGroup();	
+		final List<ProcessEntity> clusterList = this.cluster.getProcessGroup();	
 
 		clusterList.forEach(peer -> {
 			PeerConnection pc = new PeerConnection();

@@ -22,7 +22,8 @@ public class Replica implements IReplica {
 	private ISpreader eagerBroadcastSpreader;
 	private IProcessGroup clusterManager;
 	private ICache storageManager;
-	private IMessageEndDec encoder;
+	private IMessageEndDec<Message> messageEncoder;
+	private IMessageEndDec<AckMessage> ackEncoder;
 	private static final Logger logger = Logger.getLogger(Replica.class.getName());
 
 	private ServerSocket server;
@@ -34,7 +35,8 @@ public class Replica implements IReplica {
 		this.eagerBroadcastSpreader = new Spreader();
 		this.clusterManager = new ProcessGroup();
 		this.storageManager = new Cache();
-		this.encoder = new MessageEncDec();
+		this.messageEncoder = new MessageEncDec<>();
+		this.ackEncoder = new MessageEncDec<>();
 	}
 
 	public String getReplicaHost() {
@@ -76,17 +78,17 @@ public class Replica implements IReplica {
 						break;
 				}
 
-				Message msg  = this.encoder.decodeMessage(buffer);
+				Message msg  = this.messageEncoder.decodeMessage(buffer);
 				Optional<byte[]> result = this.messageFilter(msg);
 				
 				AckMessage am;
 				byte[] encodingResult;
 				if (result.isPresent()) {
 					am = new AckMessage(new String(result.get()));
-					encodingResult = this.encoder.encodeMessage(am);
+					encodingResult = this.ackEncoder.encodeMessage(am);
 				} else {
 					am = new AckMessage("1");
-					encodingResult = this.encoder.encodeMessage(am);
+					encodingResult = this.ackEncoder.encodeMessage(am);
 				}
 
 				OutputStream connOut = conn.getOutputStream();

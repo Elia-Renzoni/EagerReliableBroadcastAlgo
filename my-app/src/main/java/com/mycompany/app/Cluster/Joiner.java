@@ -12,8 +12,8 @@ import java.net.InetSocketAddress;
  *
  */
 public class Joiner {
-	private String host;
-	private int listenPort;
+	private String host; // seed node host
+	private int listenPort; // seed node listen port
 	private Socket sock;
 	private InputStream in;
 	private OutputStream out;
