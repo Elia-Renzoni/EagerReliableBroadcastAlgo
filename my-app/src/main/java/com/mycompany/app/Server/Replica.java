@@ -33,7 +33,7 @@ public class Replica implements IReplica {
 		this.listenPort = port;
 		this.replicaIpAddr = new InetSocketAddress(host, port);
 		this.eagerBroadcastSpreader = new Spreader();
-		this.clusterManager = new ProcessGroup();
+		this.clusterManager = ProcessGroup.createProcessGroupInstance();
 		this.storageManager = new Cache();
 		this.messageEncoder = new MessageEncDec<>();
 		this.ackEncoder = new MessageEncDec<>();
@@ -52,10 +52,11 @@ public class Replica implements IReplica {
 		this.server = new ServerSocket();
 		this.server.bind(this.replicaIpAddr);
 
-		Replica.logger.info("Server Listening!");
+		Replica.logger.info("Server Listening!" + this.replicaIpAddr.toString());
 
 		while (!this.isSocketClose()) {
 			Socket conn = this.server.accept();
+			Replica.logger.info("New Connection");
 			Thread t = new Thread(this.applicationThreadImpl(conn));
 			t.start();
 		}

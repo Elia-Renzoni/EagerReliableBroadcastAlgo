@@ -15,11 +15,11 @@ import java.io.IOException;
 
 public class Spreader implements ISpreader {
 	private IProcessGroup cluster;
-	private IMessageEndDec messageTranslator;
+	private IMessageEndDec<Message> messageTranslator;
 
 	public Spreader() {
 		this.cluster = ProcessGroup.createProcessGroupInstance();	
-		this.messageTranslator = new MessageEncDec();
+		this.messageTranslator = new MessageEncDec<>();
 	}	
 
 	private class PeerConnection {
@@ -28,16 +28,21 @@ public class Spreader implements ISpreader {
 		private DataInputStream peerConnReadObj;
 
 		public void createPeerConnection(final String host, final int port) throws IOException {	
+			System.out.println("PORCA MADONNA: " + host + " port: " + port);
 			this.peerConn = new Socket(host, port);
 			this.peerConn.setKeepAlive(true);
 			this.peerConn.setSendBufferSize(2500);
 			this.peerConn.setReceiveBufferSize(2500);
-			this.peerConn.setSoTimeout(10);
+			this.peerConn.setSoTimeout(10000);
+			this.peerConnReadObj = new DataInputStream(this.peerConn.getInputStream());
+			this.peerConnWriterObj = new DataOutputStream(this.peerConn.getOutputStream());
 		}
 
 
 		public void sendBytes(final byte[] messageToSpread) throws IOException {
 			this.peerConnWriterObj.write(messageToSpread);
+			this.peerConnWriterObj.flush();
+			this.peerConn.shutdownInput();
 		}
 
 		public byte[] readBytes() throws IOException {
@@ -45,7 +50,9 @@ public class Spreader implements ISpreader {
 		}
 
 		public void closePeerConnection() throws IOException {
-			this.peerConn.close();
+			if (this.peerConn != null && !this.peerConn.isClosed()) {
+        		this.peerConn.close();
+    		}
 		}
 
 	}
@@ -53,6 +60,10 @@ public class Spreader implements ISpreader {
 	@Override
 	public void eagerBroadcast(final Message msg) {
 		final List<ProcessEntity> clusterList = this.cluster.getProcessGroup();	
+		if (clusterList.isEmpty()) {
+			System.out.println("Porco DIO");
+			return;
+		}
 
 		clusterList.forEach(peer -> {
 			PeerConnection pc = new PeerConnection();

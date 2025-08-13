@@ -19,8 +19,6 @@ public class App {
 	    String host = args[0];
 	    int listenPort = Integer.parseInt(args[1]);
 	    
-	    System.out.println("Listening At... " + host + "" + listenPort);
-
 	    if (listenPort != seedListenPort) {
 	    	Joiner contactSeed = new Joiner(App.seedHost, App.seedListenPort,
 				                host, listenPort);

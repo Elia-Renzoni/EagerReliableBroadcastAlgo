@@ -1,80 +1,53 @@
-
 package com.mycompany.app.Cluster;
 
+import java.net.InetSocketAddress;
 import java.util.List;
 import java.util.ArrayList;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.Collections;
 
 public class ProcessGroup implements IProcessGroup {
-	private List<ProcessEntity> cluster;
-	private Lock mutex;
-	private static ProcessGroup instance = null;
+    private static volatile ProcessGroup instance;
 
-	public ProcessGroup() {
-		this.cluster = new ArrayList<>();
-		this.mutex = new ReentrantLock();
-	}
+    private final ConcurrentMap<String, ProcessEntity> cluster = new ConcurrentHashMap<>();
 
-	public static ProcessGroup createProcessGroupInstance() {
-		if (ProcessGroup.instance != null)
-		       return ProcessGroup.instance;
-		ProcessGroup.instance = new ProcessGroup();
-		return ProcessGroup.instance;
-	}
+    private ProcessGroup() {}
 
-	@Override
-	public void addCorrectProcess(final ProcessEntity p) {
-		try {
-			this.mutex.lock();
-			this.cluster.add(p);
-		
-		} catch (Exception e) {
-			System.err.println(e.getMessage());
-		} finally {
-			this.mutex.unlock();
-		}
-	}
+    public static ProcessGroup createProcessGroupInstance() {
+        if (instance == null) {
+            synchronized (ProcessGroup.class) {
+                if (instance == null) {
+                    instance = new ProcessGroup();
+                }
+            }
+        }
+        return instance;
+    }
 
-	@Override
-	public boolean deleteCorrectProcess(final ProcessEntity p) {
-		boolean result = false;
-		try {
-			this.mutex.lock();
-			result = this.cluster.remove(p);
+    // Helpers
+    private static String keyOf(ProcessEntity p) {
+        InetSocketAddress a = p.getCompleteSocketAddress();
+        return a.getHostString() + ":" + a.getPort();
+    }
 
-		} catch (Exception e) {
-			System.err.println(e.getMessage());
-		} finally {
-			this.mutex.unlock();
-		}
+    @Override
+    public void addCorrectProcess(final ProcessEntity p) {
+        cluster.putIfAbsent(keyOf(p), p);
+    }
 
-		return result;
-	}
+    @Override
+    public boolean deleteCorrectProcess(final ProcessEntity p) {
+        return cluster.remove(keyOf(p), p);
+    }
 
+    @Override
+    public List<ProcessEntity> getProcessGroup() {
+        return Collections.unmodifiableList(new ArrayList<>(cluster.values()));
+    }
 
-	@Override
-	public List<ProcessEntity> getProcessGroup() {
-		List<ProcessEntity> c = null;
-		try {
-			this.mutex.lock();
-			c = this.cluster;
-		} catch (Exception e) {
-			System.err.println(e.getMessage());	
-		} finally {
-			this.mutex.unlock();
-		}
-		return c;
-	}
-
-	@Override
-	public boolean isEagerBroadcastCompatible(final ProcessEntity pe) {
-		Optional<ProcessEntity> p = this.cluster.stream()
-					         .filter(pr -> pr.getCompleteSocketAddress().getAddress().toString().equals(pe.getCompleteSocketAddress().getAddress().toString()))	
-						 .findFirst();
-		if (p.isPresent()) 
-			return false;
-		return true;
-	}
+    @Override
+    public boolean isEagerBroadcastCompatible(final ProcessEntity pe) {
+        return !cluster.containsKey(keyOf(pe));
+    }
 }
