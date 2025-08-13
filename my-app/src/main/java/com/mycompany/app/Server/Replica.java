@@ -3,8 +3,8 @@ package com.mycompany.app.Server;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.lang.Thread;
 import java.net.Socket;
 import java.util.Optional;
@@ -69,16 +69,14 @@ public class Replica implements IReplica {
 	private Runnable applicationThreadImpl(Socket conn) {
 		return () -> {
 			try { 
-				InputStream connIn = conn.getInputStream();
+				DataInputStream connIn = new DataInputStream(conn.getInputStream());
 				byte[] buffer = new byte[1024];
 			
-				while (true) {
-					int status = connIn.read(buffer);
-					if (status == -1)
-						break;
-				}
+				connIn.read(buffer);
 
 				Message msg  = this.messageEncoder.decodeMessage(buffer);
+				this.messagePrinter(msg);
+				
 				Optional<byte[]> result = this.messageFilter(msg);
 				
 				AckMessage am;
@@ -90,9 +88,11 @@ public class Replica implements IReplica {
 					am = new AckMessage("1");
 					encodingResult = this.ackEncoder.encodeMessage(am);
 				}
+				System.out.println(am.toString());
 
-				OutputStream connOut = conn.getOutputStream();
+				DataOutputStream connOut = new DataOutputStream(conn.getOutputStream());
 				connOut.write(encodingResult);
+				connOut.flush();
 
 				conn.close();
 			
@@ -189,6 +189,12 @@ public class Replica implements IReplica {
 		Replica.logger.info("Delete Bucket from Cache");
 
 		return null;
+	}
+
+	private void messagePrinter(final Message msg) {
+		System.out.println("Endpoint : " + msg.getEndpoint() + " " + 
+		"Key : " + msg.getKey() + " " + "Value :  " + msg.getValue() + 
+		" " + "IP : " + msg.getNetAddr());
 	}
 }
 

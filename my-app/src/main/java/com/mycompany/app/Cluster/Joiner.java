@@ -5,7 +5,8 @@ import java.net.Socket;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetSocketAddress;
+import java.io.DataOutputStream;
+import java.io.DataInputStream;
 
 /**
  * Dialer
@@ -14,41 +15,48 @@ import java.net.InetSocketAddress;
 public class Joiner {
 	private String host; // seed node host
 	private int listenPort; // seed node listen port
+	private String nodeHost;
+	private int nodeListenPort;
 	private Socket sock;
-	private InputStream in;
-	private OutputStream out;
-	private IMessageEndDec encoder;
+	private DataInputStream in;
+	private DataOutputStream out;
+	private IMessageEndDec<Message> encoder;
 	private Message msgToEncode;
-	private static final int EOF = -1;
 	
-	public Joiner(final String host, final int listenPort) {
+	public Joiner(final String host, final int listenPort, final String myHost,
+		      final int myListenPort) {
 		this.host = host;
 		this.listenPort = listenPort;
-		this.encoder = new MessageEncDec();
+		this.nodeHost = myHost;
+		this.nodeListenPort = myListenPort;
+		this.encoder = new MessageEncDec<>();
 	}
 
 	public void DialSeed() {
 		try {
 			this.sock = new Socket(this.host, this.listenPort);
-			this.in = this.sock.getInputStream();
-			this.out = this.sock.getOutputStream();
+			this.setConnFlags();
+			this.in = new DataInputStream(this.sock.getInputStream());
+			this.out = new DataOutputStream(this.sock.getOutputStream());
 
-			this.msgToEncode = new Message("/add-node", null, null, new InetSocketAddress(this.host, this.listenPort).toString());
+			var conv = String.valueOf(this.nodeListenPort);
+			var joined = "" + this.nodeHost + ":" + conv;
+
+			this.msgToEncode = new Message("/add", null, null, joined);
 
 			var msgToSend = this.encoder.encodeMessage(this.msgToEncode);
 
 			this.out.write(msgToSend);
+			this.out.flush();
+			
+			this.sock.shutdownOutput();
 
 			byte[] buffer = new byte[1024];
-			while (true) {
-				int readed = this.in.read(buffer);
-				if (readed == Joiner.EOF)
-				       break;	
-			}
+			this.in.read(buffer);
 
 			// ignore the ack value returned by the seed node
+			System.out.println(buffer.toString());
 
-			this.sock.close();
 		} catch (IOException e) {
 			System.err.println(e.getMessage());
 			return;
@@ -57,5 +65,10 @@ public class Joiner {
 				this.sock.close();
 			} catch (Exception e) { return; }
 		}
+	}
+
+	private void setConnFlags() throws IOException {
+		this.sock.setSoTimeout(10000);
+		this.sock.setKeepAlive(true);
 	}
 }

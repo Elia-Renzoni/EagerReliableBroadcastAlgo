@@ -22,7 +22,8 @@ public class App {
 	    System.out.println("Listening At... " + host + "" + listenPort);
 
 	    if (listenPort != seedListenPort) {
-	    	Joiner contactSeed = new Joiner(App.seedHost, App.seedListenPort);
+	    	Joiner contactSeed = new Joiner(App.seedHost, App.seedListenPort,
+				                host, listenPort);
 		// join the cluster by contacting the seed node
 		contactSeed.DialSeed();
 	    }
